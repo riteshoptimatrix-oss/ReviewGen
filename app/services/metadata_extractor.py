@@ -23,7 +23,11 @@ class MetadataExtractor:
             # Google Maps titles are often "Business Name - Google Maps"
             if title and " - Google Maps" in title:
                 title = title.replace(" - Google Maps", "")
-            extracted["business_name"] = title
+            
+            # Prevent generic names from being used as the business name
+            generic_titles = {"Google", "Google Maps", "Google Search", "Sign in - Google Accounts"}
+            if title not in generic_titles:
+                extracted["business_name"] = title
             
         # URL (can sometimes be the website or the google page)
         # We avoid returning google maps url as the business website.

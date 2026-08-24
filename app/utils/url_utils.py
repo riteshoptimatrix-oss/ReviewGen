@@ -21,6 +21,15 @@ def validate_google_url(url: str) -> str:
     except ValueError:
         raise InvalidURLError("Failed to parse URL.")
         
+    # Strip /review or /review/ from the path
+    path = parsed.path
+    if path.endswith("/review"):
+        path = path[:-7]
+    elif path.endswith("/review/"):
+        path = path[:-8]
+        
+    url = urllib.parse.urlunparse((parsed.scheme, parsed.netloc, path, parsed.params, parsed.query, parsed.fragment))
+    
     if parsed.scheme not in ("http", "https"):
         raise InvalidURLError(f"Invalid scheme: {parsed.scheme}")
         

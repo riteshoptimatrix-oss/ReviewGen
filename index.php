@@ -4,6 +4,59 @@
  */
 
 $specific_user = null;
+global $app;
+
+$db_error = null;
+// Try to fetch via MVC framework first
+if (isset($app) && isset($_GET['id'])) {
+    try {
+        $obj_registration = $app->load_model("registration");
+        $rs = $obj_registration->execute("SELECT", false, "", "id='" . intval($_GET['id']) . "'");
+        if (!empty($rs)) {
+            $specific_user = $rs[0];
+        } else {
+            $db_error = "User with id=" . $_GET['id'] . " not found in registration table.";
+        }
+    } catch (Exception $e) {
+        $db_error = "MVC Framework DB Error: " . $e->getMessage();
+    }
+} 
+// Fallback to standalone MySQLi connection if accessed directly (outside MVC router)
+elseif (isset($_GET['id'])) {
+    try {
+        // Adjust these credentials if your local XAMPP/WAMP setup is different
+        $db_host = 'localhost';
+        $db_name = 'qlikbiz';
+        $db_user = 'root';
+        $db_pass = 'rootadmin'; // UPDATE YOUR MYSQL PASSWORD HERE! (e.g., 'root', 'password', etc.)
+        
+        // Use @ to suppress PHP warning so it doesn't break the HTML UI
+        $conn = @new mysqli($db_host, $db_user, $db_pass, $db_name);
+        
+        if ($conn->connect_error) {
+            throw new Exception("Connection failed: " . $conn->connect_error);
+        }
+        
+        $conn->set_charset("utf8mb4");
+        
+        $stmt = $conn->prepare("SELECT * FROM registration WHERE id = ? LIMIT 1");
+        $id = intval($_GET['id']);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            $specific_user = $row;
+        } else {
+            $db_error = "User with id=" . $_GET['id'] . " not found in registration table (MySQLi).";
+        }
+        $stmt->close();
+        $conn->close();
+    } catch (Exception $e) {
+        $db_error = "Database Connection Failed: " . $e->getMessage() . "<br>Please check the credentials at the top of index.php ($db_user@$db_host, db: $db_name).";
+    }
+}
+
 // 1. Data Store
 $SERVICE_REVIEW_LIBRARY = [
     'IT Services' => [
@@ -2366,42 +2419,23 @@ $SERVICE_REVIEW_LIBRARY = [
 ];
 
 $BUSINESS_CARDS = [];
-$obj_registration_list = $app->load_model("registration");
-$rs_registrations = $obj_registration_list->execute("SELECT", false, "", "status='Active' AND google_review_link != ''", "id DESC LIMIT 12");
-if (!empty($rs_registrations)) {
-    foreach ($rs_registrations as $reg) {
-       $BUSINESS_CARDS[] = [
-    'id' => $reg['id'],
-    'company_name' => $reg['company_name'] ?: ($reg['first_name'] . ' ' . $reg['last_name']),
-    'google_review_url' => $reg['google_review_link'],
-    'icon' => $reg['is_restaurant'] == 'Yes' ? 'fa-cutlery' : 'fa-building',
-    'services' => isset($reg['services']) ? $reg['services'] : ''
-];
+if (isset($app)) {
+    $obj_registration_list = $app->load_model("registration");
+    $rs_registrations = $obj_registration_list->execute("SELECT", false, "", "status='Active' AND google_review_link != ''", "id DESC LIMIT 12");
+    if (!empty($rs_registrations)) {
+        foreach ($rs_registrations as $reg) {
+           $BUSINESS_CARDS[] = [
+        'id' => $reg['id'],
+        'company_name' => $reg['company_name'] ?: ($reg['first_name'] . ' ' . $reg['last_name']),
+        'google_review_url' => $reg['google_review_link'],
+        'icon' => $reg['is_restaurant'] == 'Yes' ? 'fa-cutlery' : 'fa-building',
+        'services' => isset($reg['services']) ? $reg['services'] : ''
+    ];
+        }
     }
 }
 
-if (empty($BUSINESS_CARDS)) {
-    $BUSINESS_CARDS = [
-        [
-            'id' => '1',
-            'company_name' => 'TechNova Solutions',
-            'google_review_url' => 'https://g.page/r/technova/review',
-            'icon' => 'fa-laptop-code'
-        ],
-        [
-            'id' => '2',
-            'company_name' => 'Apex Real Estate',
-            'google_review_url' => 'https://g.page/r/apexrealestate/review',
-            'icon' => 'fa-building'
-        ],
-        [
-            'id' => '3',
-            'company_name' => 'Bite & Sip Cafe',
-            'google_review_url' => 'https://g.page/r/biteandsip/review',
-            'icon' => 'fa-coffee'
-        ]
-    ];
-}
+// Demo data removed - using real data or manual input only
 
 // =============================================================================
 // FastAPI Business Category Integration
@@ -2413,7 +2447,7 @@ if (empty($BUSINESS_CARDS)) {
  * Default: https://reviewgen-e1i8.onrender.com
  */
 define('BUSINESS_CATEGORY_API_URL', getenv('BUSINESS_CATEGORY_API_URL') ?: 'https://reviewgen-e1i8.onrender.com');
-define('BUSINESS_CATEGORY_API_KEY', getenv('BUSINESS_CATEGORY_API_KEY') ?: '');
+define('BUSINESS_CATEGORY_API_KEY', getenv('BUSINESS_CATEGORY_API_KEY') ?: 'your_secret_api_key_here');
 
 /**
  * Calls the FastAPI microservice to resolve a business category from a Google review URL.
@@ -2842,6 +2876,13 @@ if (empty($defaultService)) {
     <!-- Header -->
     <div class="text-center animate-fade-in-up">
         <h1 class="text-3xl font-bold tracking-tight text-slate-900">Review Generator</h1>
+        <?php if (isset($db_error)): ?>
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 shadow-sm">
+                <p class="text-sm font-bold text-red-800"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Database Error</p>
+                <p class="text-xs text-red-600 mt-1"><?= $db_error ?></p>
+            </div>
+        <?php endif; ?>
+        
         <p class="text-slate-500 mt-2">Select a business card below to begin generating your review.</p>
     </div>
 
