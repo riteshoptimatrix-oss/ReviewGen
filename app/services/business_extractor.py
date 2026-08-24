@@ -20,9 +20,23 @@ class BusinessExtractor:
         meta_data = MetadataExtractor.extract(soup)
         embedded_data = EmbeddedDataExtractor.extract(soup, html)
         
+        # Extract business name from URL if possible
+        import urllib.parse
+        url_data = {}
+        for u in [input_url, final_url]:
+            parsed = urllib.parse.urlparse(u)
+            if "/maps/place/" in parsed.path:
+                parts = parsed.path.split("/maps/place/")
+                if len(parts) > 1:
+                    name_part = parts[1].split("/")[0]
+                    decoded_name = urllib.parse.unquote_plus(name_part)
+                    if decoded_name:
+                        url_data["business_name"] = decoded_name.replace('-', ' ')
+                        break
+        
         business_name = cls._select_best_value(
             "business_name", 
-            [json_ld_data, meta_data, embedded_data]
+            [url_data, json_ld_data, meta_data, embedded_data]
         )
         
         raw_category = cls._select_best_value(
