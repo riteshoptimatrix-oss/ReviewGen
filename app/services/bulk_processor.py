@@ -5,7 +5,6 @@ from typing import List
 from app.schemas.business import ErrorDetail, ResolveResponse
 from app.services.resolution_orchestrator import ResolutionOrchestrator
 from app.core.config import settings
-from app.db.session import AsyncSessionLocal
 
 class BulkProcessor:
     def __init__(self, http_client: httpx.AsyncClient):
@@ -20,12 +19,12 @@ class BulkProcessor:
         """
         async def sem_process(url: str):
             async with self.semaphore:
-                if db_session is not None:
-                    orchestrator = ResolutionOrchestrator(self.http_client, db_session)
-                    return await orchestrator.process_url(url)
-                async with AsyncSessionLocal() as session:
-                    orchestrator = ResolutionOrchestrator(self.http_client, session)
-                    return await orchestrator.process_url(url)
+                session = db_session
+                if session is None:
+                    from app.db.session import db
+                    session = db
+                orchestrator = ResolutionOrchestrator(self.http_client, session)
+                return await orchestrator.process_url(url)
 
         tasks = [sem_process(url) for url in urls]
         results = await asyncio.gather(*tasks, return_exceptions=True)
