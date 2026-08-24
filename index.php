@@ -3,10 +3,12 @@
  * Review Generator - Single PHP File
  */
 
-// Bootstrap MVC framework to connect to DB and load models
-require_once("core/app.php");
-$app = &app::get_instance();
-$app->objDB->open();
+// Bootstrap MVC framework to connect to MongoDB and load data
+require_once("vendor/autoload.php"); // Ensure you have installed mongodb/mongodb via composer
+
+$mongoUri = getenv('MONGODB_URI') ?: 'mongodb+srv://riteshoptimatrix_db_user:ZJIKusaw67Ihx1BL@reviewdbcluster.a9tkxni.mongodb.net/?appName=reviewdbcluster';
+$client = new MongoDB\Client($mongoUri);
+$collection = $client->business_cache->registration;
 
 // Fetch specific user if id or url is provided
 $specific_user = null;
@@ -14,18 +16,16 @@ $reg_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $reg_url = isset($_GET['url']) ? trim($_GET['url']) : '';
 
 if ($reg_id > 0) {
-    $obj_registration = $app->load_model("registration");
-    $rs = $obj_registration->execute("SELECT", false, "", "status='Active' AND id=" . $reg_id, "");
-    if (!empty($rs)) {
-        $specific_user = $rs[0];
+    $specific_user = $collection->findOne(['status' => 'Active', 'id' => $reg_id]);
+    if ($specific_user) {
+        // Convert BSONDocument to array if necessary, depending on driver usage
+        $specific_user = (array) $specific_user;
         $services = isset($specific_user['services']) ? $specific_user['services'] : '';
     }
 } elseif ($reg_url != '') {
-    $obj_registration = $app->load_model("registration");
-    $escaped_url = mysqli_real_escape_string($app->objDB->getConnection(), $reg_url);
-    $rs = $obj_registration->execute("SELECT", false, "", "status='Active' AND url='" . $escaped_url . "'", "");
-    if (!empty($rs)) {
-        $specific_user = $rs[0];
+    $specific_user = $collection->findOne(['status' => 'Active', 'url' => $reg_url]);
+    if ($specific_user) {
+        $specific_user = (array) $specific_user;
         $services = isset($specific_user['services']) ? $specific_user['services'] : '';
     }
 }

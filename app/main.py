@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
     except Exception as exc:
-        logger.warning(f"MySQL initialization skipped/failed: {exc}")
+        logger.warning(f"MongoDB initialization skipped/failed: {exc}")
 
     yield
 

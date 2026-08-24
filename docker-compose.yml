@@ -1,32 +1,13 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    environment:
-      - MYSQL_ROOT_PASSWORD=rootpass
-      - MYSQL_DATABASE=business_cache
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysqldata:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   api:
     build: .
     ports:
       - "8000:8000"
     environment:
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=rootpass
-      - MYSQL_DB=business_cache
+      - MONGODB_URI=mongodb+srv://riteshoptimatrix_db_user:ZJIKusaw67Ihx1BL@reviewdbcluster.a9tkxni.mongodb.net/?appName=reviewdbcluster
+      - MONGODB_DB_NAME=business_cache
       - DEBUG_EXTRACTION=false
       - HTTP_TIMEOUT_SECONDS=20
       - MAX_REDIRECTS=10
@@ -34,9 +15,3 @@ services:
       - RATE_LIMIT_REQUESTS=100
       - RATE_LIMIT_WINDOW_SECONDS=60
       - MAX_CONCURRENT_REQUESTS=10
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-volumes:
-  mysqldata:

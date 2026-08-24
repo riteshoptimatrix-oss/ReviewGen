@@ -10,5 +10,5 @@ pytest
 pytest-asyncio
 tenacity
 python-json-logger
-aiomysql
-sqlalchemy
+motor
+pymongo

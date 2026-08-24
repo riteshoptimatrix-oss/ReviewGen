@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy.engine import URL
+
 from typing import Optional
 
 class Settings(BaseSettings):
@@ -7,25 +7,9 @@ class Settings(BaseSettings):
     http_timeout_seconds: int = 20
     max_redirects: int = 10
 
-    # MySQL connection settings
-    mysql_host: str = "localhost"
-    mysql_port: int = 3306
-    mysql_user: str = "root"
-    mysql_password: str = ""
-    mysql_db: str = "business_cache"
-    mysql_charset: str = "utf8mb4"
-
-    @property
-    def database_url(self) -> URL:
-        return URL.create(
-            drivername="mysql+aiomysql",
-            username=self.mysql_user,
-            password=self.mysql_password,
-            host=self.mysql_host,
-            port=self.mysql_port,
-            database=self.mysql_db,
-            query={"charset": self.mysql_charset},
-        )
+    # MongoDB connection settings
+    mongodb_uri: str = "mongodb://localhost:27017"
+    mongodb_db_name: str = "business_cache"
 
     cache_ttl_hours: int = 168
     max_concurrent_requests: int = 10

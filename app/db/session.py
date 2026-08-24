@@ -1,38 +1,22 @@
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
+from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.core.config import settings
 
-
-class Base(DeclarativeBase):
-    pass
-
-
-engine = create_async_engine(
-    settings.database_url,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    max_overflow=10,
-)
-
-AsyncSessionLocal = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
-
-
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session
-
+client = None
+db = None
 
 async def init_db():
-    from app.models import business_cache  # noqa: F401
+    global client
+    global db
+    client = AsyncIOMotorClient(settings.mongodb_uri)
+    db = client[settings.mongodb_db_name]
+    # Create indexes if they don't exist
+    await db.business_cache.create_index("url_hash", unique=True)
+    await db.business_cache.create_index("status")
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
+async def get_db():
+    yield db
 
 async def close_db():
-    await engine.dispose()
+    if client:
+        client.close()
