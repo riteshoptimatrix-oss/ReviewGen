@@ -2557,19 +2557,12 @@ function fetchCategoryFromMicroservice(string $googleReviewUrl): ?string {
 
 function scrapeGoogleCategoryHack($businessName) {
     $ch = curl_init();
-    $searchUrl = "https://www.google.com/search?q=" . urlencode($businessName) . "&hl=en";
+    $searchUrl = "https://html.duckduckgo.com/html/?q=" . urlencode($businessName . " category");
     
     // --- BYPASS GUARD: Realistic Browser Headers ---
     $headers = [
         "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
         "Accept-Language: en-US,en;q=0.9",
-        "Sec-Ch-Ua: \"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
-        "Sec-Ch-Ua-Mobile: ?0",
-        "Sec-Ch-Ua-Platform: \"Windows\"",
-        "Sec-Fetch-Dest: document",
-        "Sec-Fetch-Mode: navigate",
-        "Sec-Fetch-Site: none",
-        "Sec-Fetch-User: ?1",
         "Upgrade-Insecure-Requests: 1"
     ];
 
@@ -2589,26 +2582,14 @@ function scrapeGoogleCategoryHack($businessName) {
     curl_close($ch);
     
     if ($html) {
-        $pattern1 = '/<span class="YhemCb"[^>]*>(.*?)<\/span>/i';
-        if (preg_match($pattern1, $html, $matches)) {
-            $scrapedText = strip_tags($matches[1]);
-            $parts = explode(' in ', $scrapedText);
-            return trim($parts[0]);
-        }
-        $pattern2 = '/data-attrid="subtitle"[^>]*>.*?<span[^>]*>(.*?)<\/span>/i';
-        if (preg_match($pattern2, $html, $matches)) {
-            $scrapedText = strip_tags($matches[1]);
-            $parts = explode(' in ', $scrapedText);
-            return trim($parts[0]);
-        }
-        
-        // --- ATTEMPT 3: Brute force search for known categories ---
+        // --- ATTEMPT: Brute force search for known categories in DuckDuckGo snippets ---
         $commonCats = [
             'tour operator', 'travel agency', 'software training institute', 'restaurant', 'cafe', 
             'coffee shop', 'plumber', 'electrician', 'hvac contractor', 'real estate agency', 
             'law firm', 'lawyer', 'accountant', 'dentist', 'dental clinic', 'doctor', 'hospital', 
             'gym', 'fitness center', 'yoga studio', 'hair salon', 'beauty salon', 'spa', 'car repair', 
             'auto repair shop', 'car wash', 'marketing agency', 'advertising agency', 'web designer', 
+            'software development', 'web development', 'it services', 
             'software company', 'information technology', 'cleaning service', 'pest control', 
             'moving company', 'roofing contractor', 'painter', 'landscaper', 'bakery', 'hotel', 
             'insurance agency', 'event planner', 'photographer', 'caterer', 'florist', 'jeweler', 
@@ -2671,6 +2652,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'generate') {
         'web designer' => 'Premium Web Design',
         'website designer' => 'Premium Web Design',
         'software company' => 'IT Services',
+        'software development' => 'IT Services',
+        'web development' => 'IT Services',
+        'it services' => 'IT Services',
         'information technology' => 'IT Services',
         'cleaning service' => 'Cleaning Services',
         'house cleaning' => 'Cleaning Services',
@@ -3118,44 +3102,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.review) {
-                // --- DEBUG INFO ---
-                console.group("Google Scraper Debug Info");
-                console.log("1. Raw Scraped Category: ", data.scraped_raw || 'None / Failed');
-                console.log("2. Did Scraper Map & Match a Library Service?: ", data.scraper_success ? 'Yes' : 'No');
-                console.log("3. Original Service from Database: ", data.original_service || 'None');
-                console.log("=> FINAL Service Used For Review: ", data.service_used);
-                console.groupEnd();
-                
                 // Personalize with selected business name
                 let text = data.review.replace(/\{company_name\}/g, currentBusinessName);
                 reviewOutput.textContent = text;
                 reviewDisplaySection.classList.remove('hidden');
-                
-                // --- ON-SCREEN DEBUG INFO ---
-                let debugDiv = document.getElementById('scraperDebugInfo');
-                if (!debugDiv) {
-                    debugDiv = document.createElement('div');
-                    debugDiv.id = 'scraperDebugInfo';
-                    debugDiv.className = 'mt-5 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-500 text-left w-full shadow-sm';
-                    reviewDisplaySection.appendChild(debugDiv);
-                }
-            
-                debugDiv.innerHTML = `
-                    <div class="font-bold text-slate-700 mb-2 border-b border-slate-200 pb-1"><i class="fa-solid fa-bug text-indigo-500 mr-1"></i> Scraper & FastAPI Debug Info</div>
-                    <div class="grid grid-cols-[180px_1fr] gap-1">
-                        <div>FastAPI Business:</div><div class="text-indigo-600 font-medium">${data.business_name || '<span class="text-slate-400">n/a</span>'}</div>
-                        <div>FastAPI Category:</div><div class="text-indigo-600 font-medium">${data.normalized_category || '<span class="text-slate-400">n/a</span>'}</div>
-                        <div>Category Confidence:</div><div class="${data.category_confidence > 0.8 ? 'text-emerald-600' : 'text-amber-500'} font-medium">${data.category_confidence ? (data.category_confidence * 100).toFixed(0) + '%' : 'n/a'}</div>
-                        <div>Category Source:</div><div class="text-slate-700 font-medium">${data.category_source || '<span class="text-slate-400">n/a</span>'}</div>
-                        <div class="mt-1 pt-1 border-t border-slate-100 col-span-2"></div>
-                        <div>Raw Text Scraped:</div><div class="text-indigo-600 font-medium">${data.scraped_raw || 'None / Failed'}</div>
-                        <div>Mapped to Library?</div><div class="${data.scraper_success ? 'text-emerald-600' : 'text-rose-500'} font-medium">${data.scraper_success ? 'Yes' : 'No'}</div>
-                        <div>Original DB Service:</div><div class="text-slate-700 font-medium">${data.original_service || 'None'}</div>
-                    </div>
-                    <div class="mt-2 pt-2 border-t border-slate-200 text-sm">
-                        Final Service Used: <span class="font-bold text-slate-900">${data.service_used}</span>
-                    </div>
-                `;
                 
                 // Optional auto-copy feature
                 if (navigator.clipboard) {
