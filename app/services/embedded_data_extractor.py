@@ -1,8 +1,6 @@
 import re
-import json
 from bs4 import BeautifulSoup
-from typing import Dict, Any, Optional
-from app.core.logging import logger
+from typing import Dict, Any
 from app.utils.text_utils import clean_text
 
 class EmbeddedDataExtractor:

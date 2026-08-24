@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from app.utils.text_utils import clean_text
 
 class MetadataExtractor:

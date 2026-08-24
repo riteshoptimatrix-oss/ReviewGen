@@ -1,6 +1,4 @@
 from bs4 import BeautifulSoup
-from typing import Optional
-from app.core.logging import logger
 
 class GooglePageDetector:
     

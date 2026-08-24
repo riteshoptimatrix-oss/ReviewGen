@@ -1,6 +1,6 @@
 import time
 import httpx
-from typing import List, Dict, Any, Optional
+from typing import List
 from pydantic import BaseModel
 from app.core.exceptions import (
     HttpTimeoutError,
@@ -11,7 +11,6 @@ from app.core.logging import logger
 from app.core.config import settings
 
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from app.core.config import settings
 
 class ResolverResult(BaseModel):
     input_url: str

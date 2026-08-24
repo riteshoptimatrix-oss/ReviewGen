@@ -1,11 +1,9 @@
 from bs4 import BeautifulSoup
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 from app.schemas.business import BusinessData
 from app.services.structured_data_extractor import StructuredDataExtractor
 from app.services.metadata_extractor import MetadataExtractor
 from app.services.embedded_data_extractor import EmbeddedDataExtractor
-from app.core.logging import logger
-from app.core.exceptions import ExtractionFailedError
 
 class BusinessExtractor:
     
