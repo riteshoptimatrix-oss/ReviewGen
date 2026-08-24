@@ -8,8 +8,15 @@ class Settings(BaseSettings):
     max_redirects: int = 10
 
     # MongoDB connection settings
-    mongodb_uri: str = "mongodb://localhost:27017"
+    mongodb_uri: str = "mongodb+srv://riteshoptimatrix_db_user:TSNcuwbtaXPtloTA@reviewdbcluster.a9tkxni.mongodb.net/?appName=reviewdbcluster"
     mongodb_db_name: str = "business_cache"
+
+    # MySQL connection settings
+    mysql_host: str = "192.168.1.25"
+    mysql_port: int = 3306
+    mysql_user: str = "root"
+    mysql_password: str = ""
+    mysql_db: str = "qlikbiz"
 
     cache_ttl_hours: int = 168
     max_concurrent_requests: int = 10
