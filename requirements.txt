@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+httpx
+beautifulsoup4
+lxml
+pydantic
+pydantic-settings
+python-dotenv
+pytest
+pytest-asyncio
+tenacity
+python-json-logger
+aiomysql
+sqlalchemy
