@@ -3,33 +3,7 @@
  * Review Generator - Single PHP File
  */
 
-// Bootstrap MVC framework to connect to MongoDB and load data
-require_once("vendor/autoload.php"); // Ensure you have installed mongodb/mongodb via composer
-
-$mongoUri = getenv('MONGODB_URI') ?: 'mongodb+srv://riteshoptimatrix_db_user:ZJIKusaw67Ihx1BL@reviewdbcluster.a9tkxni.mongodb.net/?appName=reviewdbcluster';
-$client = new MongoDB\Client($mongoUri);
-$collection = $client->business_cache->registration;
-
-// Fetch specific user if id or url is provided
 $specific_user = null;
-$reg_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$reg_url = isset($_GET['url']) ? trim($_GET['url']) : '';
-
-if ($reg_id > 0) {
-    $specific_user = $collection->findOne(['status' => 'Active', 'id' => $reg_id]);
-    if ($specific_user) {
-        // Convert BSONDocument to array if necessary, depending on driver usage
-        $specific_user = (array) $specific_user;
-        $services = isset($specific_user['services']) ? $specific_user['services'] : '';
-    }
-} elseif ($reg_url != '') {
-    $specific_user = $collection->findOne(['status' => 'Active', 'url' => $reg_url]);
-    if ($specific_user) {
-        $specific_user = (array) $specific_user;
-        $services = isset($specific_user['services']) ? $specific_user['services'] : '';
-    }
-}
-
 // 1. Data Store
 $SERVICE_REVIEW_LIBRARY = [
     'IT Services' => [
