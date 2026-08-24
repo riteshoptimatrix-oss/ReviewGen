@@ -2436,9 +2436,9 @@ if (empty($BUSINESS_CARDS)) {
 /**
  * API endpoint for the Python FastAPI microservice.
  * Override via environment variable: BUSINESS_CATEGORY_API_URL
- * Default: http://127.0.0.1:8000
+ * Default: https://reviewgen-e1i8.onrender.com
  */
-define('BUSINESS_CATEGORY_API_URL', getenv('BUSINESS_CATEGORY_API_URL') ?: 'http://127.0.0.1:8000');
+define('BUSINESS_CATEGORY_API_URL', getenv('BUSINESS_CATEGORY_API_URL') ?: 'https://reviewgen-e1i8.onrender.com');
 define('BUSINESS_CATEGORY_API_KEY', getenv('BUSINESS_CATEGORY_API_KEY') ?: '');
 
 /**
